@@ -10,8 +10,8 @@ out vec3 FragPos;
 
 void main()
 {
-    FragPos = aNormal;
-    vec4 worldPos = vec4(aPos, 1.0);
+    FragPos = aPos;
+    vec4 worldPos = vec4(aPos * 50.0, 1.0);
     vec4 pos = projection * view * worldPos;
     //pos = pos / pos.w;
     gl_Position = pos;

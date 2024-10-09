@@ -17,6 +17,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path, bool gammaCorrection);
+unsigned int loadCubemap(const std::vector<std::string>& paths);
 void renderQuad();
 void renderCube();
 
@@ -78,7 +79,8 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // build and compile shaders
     // -------------------------
     Shader shaderGeometryPass("8.1.g_buffer.vs", "8.1.g_buffer.fs");
@@ -88,7 +90,7 @@ int main()
       
     // load models
     // -----------
-    //Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     std::vector<glm::vec3> objectPositions;
     objectPositions.push_back(glm::vec3(-3.0,  -0.5, -3.0));
     objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
@@ -99,6 +101,18 @@ int main()
     objectPositions.push_back(glm::vec3(-3.0,  -0.5,  3.0));
     objectPositions.push_back(glm::vec3( 0.0,  -0.5,  3.0));
     objectPositions.push_back(glm::vec3( 3.0,  -0.5,  3.0));
+
+    // load skybox texture
+    vector<std::string> faces
+    {
+        FileSystem::getPath("resources/textures/skybox/right.jpg"),
+        FileSystem::getPath("resources/textures/skybox/left.jpg"),
+        FileSystem::getPath("resources/textures/skybox/bottom.jpg"),
+        FileSystem::getPath("resources/textures/skybox/top.jpg"),
+        FileSystem::getPath("resources/textures/skybox/front.jpg"),
+        FileSystem::getPath("resources/textures/skybox/back.jpg")
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
 
 
     // configure g-buffer framebuffer
@@ -170,7 +184,7 @@ int main()
     //shaderLightingPass.setInt("gAlbedoSpec", 2);
 
     // render loop
-    // -----------
+    // ----------- 
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
@@ -192,7 +206,7 @@ int main()
           
         // 1. geometry pass: render scene's geometry/color data into gbuffer 
         // -----------------------------------------------------------------
-        //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+        //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer); 
           
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f, 100.0f);
@@ -201,27 +215,31 @@ int main()
         
         // 4. render sky box 
         {
+            glActiveTexture(GL_TEXTURE0);   
+            glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+            shaderSky.setInt("skybox", 0);
+
             glm::mat4 lview = view;
             lview[3] = glm::vec4(0.0, .0, .0, 1.0);
             shaderSky.use();
             shaderSky.setMat4("model", glm::mat4());
             shaderSky.setMat4("projection", projection);
             shaderSky.setMat4("view", lview);
-            renderCube();
+            renderCube(); 
         } 
-        
-        
-        //shaderGeometryPass.use();
-        //shaderGeometryPass.setMat4("projection", projection);
-        //shaderGeometryPass.setMat4("view", view);
-        //for (unsigned int i = 0; i < objectPositions.size(); i++) 
-        //{
-        //    model = glm::mat4(1.0f);
-        //    model = glm::translate(model, objectPositions[i]);
-        //    model = glm::scale(model, glm::vec3(0.5f));
-        //    shaderGeometryPass.setMat4("model", model);
-        //    backpack.Draw(shaderGeometryPass);
-        //}
+         
+        shaderGeometryPass.use();
+        shaderGeometryPass.setMat4("projection", projection);
+        shaderGeometryPass.setMat4("view", view);
+        for (unsigned int i = 0; i < objectPositions.size(); i++)  
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, objectPositions[i]); 
+            model = glm::scale(model, glm::vec3(0.5f));
+            shaderGeometryPass.setMat4("model", model);
+            backpack.Draw(shaderGeometryPass);
+            //break;
+        }
 
         //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -447,3 +465,44 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
+
+
+// loads a cubemap texture from 6 individual texture faces
+// order:
+// +X (right)
+// -X (left)
+// +Y (top)
+// -Y (bottom)
+// +Z (front) 
+// -Z (back)
+// -------------------------------------------------------
+unsigned int loadCubemap(const std::vector<std::string>& faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
