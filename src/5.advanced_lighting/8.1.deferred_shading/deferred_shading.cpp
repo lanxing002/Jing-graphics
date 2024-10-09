@@ -80,7 +80,7 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     // build and compile shaders
     // -------------------------
     Shader shaderGeometryPass("8.1.g_buffer.vs", "8.1.g_buffer.fs");
@@ -89,19 +89,20 @@ int main()
     Shader shaderSky("skybox.vs", "skybox.fs");
       
     // load models
-    // -----------
+    // ----------- 
     Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     std::vector<glm::vec3> objectPositions;
-    objectPositions.push_back(glm::vec3(-3.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5,  0.0));
-    objectPositions.push_back(glm::vec3(-3.0,  -0.5,  3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5,  3.0));
-    objectPositions.push_back(glm::vec3( 3.0,  -0.5,  3.0));
-
+    objectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
+    objectPositions.push_back(glm::vec3(-3.1,  -0.6, -3.0));
+    //objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
+    //objectPositions.push_back(glm::vec3( 3.0,  -0.5, -3.0));
+    //objectPositions.push_back(glm::vec3(-3.0,  -0.5,  0.0));
+    //objectPositions.push_back(glm::vec3( 0.0,  -0.5,  0.0));
+    //objectPositions.push_back(glm::vec3( 3.0,  -0.5,  0.0));
+    //objectPositions.push_back(glm::vec3(-3.0,  -0.5,  3.0));
+    //objectPositions.push_back(glm::vec3( 0.0,  -0.5,  3.0));
+    //objectPositions.push_back(glm::vec3( 3.0,  -0.5,  3.0));
+     
     // load skybox texture
     vector<std::string> faces
     {
@@ -202,7 +203,7 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          
-         
+          
           
         // 1. geometry pass: render scene's geometry/color data into gbuffer 
         // -----------------------------------------------------------------
@@ -220,9 +221,9 @@ int main()
             shaderSky.setInt("skybox", 0);
 
             glm::mat4 lview = view;
-            lview[3] = glm::vec4(0.0, .0, .0, 1.0);
+            lview[3] = glm::vec4(0.0, .0, .0, 1.0);  
             shaderSky.use();
-            shaderSky.setMat4("model", glm::mat4());
+            shaderSky.setMat4("model", glm::mat4()); 
             shaderSky.setMat4("projection", projection);
             shaderSky.setMat4("view", lview);
             renderCube(); 
@@ -231,6 +232,7 @@ int main()
         shaderGeometryPass.use();
         shaderGeometryPass.setMat4("projection", projection);
         shaderGeometryPass.setMat4("view", view);
+        shaderGeometryPass.setFloat("iTime", currentFrame);
         for (unsigned int i = 0; i < objectPositions.size(); i++)  
         {
             model = glm::mat4(1.0f);
@@ -289,11 +291,11 @@ int main()
         //    model = glm::translate(model, lightPositions[i]);
         //    model = glm::scale(model, glm::vec3(0.125f));
         //    shaderLightBox.setMat4("model", model);
-        //    shaderLightBox.setVec3("lightColor", lightColors[i]);
+        //    shaderLightBox.setVec3("lightColor", lightColors[i]); 
         //    renderCube();
         //}
 
-
+         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -325,10 +327,10 @@ void renderCube()
             -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
              1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
              1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+             1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right 
+            -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left 
             -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-            // left face
+            // left face 
             -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
             -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
             -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left

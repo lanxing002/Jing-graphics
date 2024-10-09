@@ -11,10 +11,18 @@ in vec3 Normal;
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
+uniform float iTime;
+
+float dither13(vec2 pos)
+{
+  return fract(dot(pos, vec2(4, 7) / 13.0));
+}
 
 void main()
 {    
     // and the diffuse per-fragment color
     fragColor.rgb = texture(texture_diffuse1, TexCoords).rgb;
-    fragColor.a = 0.6;
+    //fragColor.a = 0.6;
+    float alpha = clamp((cos(iTime * 0.2) + 1.0) * 0.5, 0.0, 1.0);
+    fragColor.a = step(alpha, dither13(gl_FragCoord.xy));
 }
