@@ -26,11 +26,10 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
+Camera camera(glm::vec3(120.0f, 50.0f, 5.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
-
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -43,7 +42,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    camera.MovementSpeed *= 36.0;
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -84,6 +83,7 @@ int main()
     // build and compile shaders
     // -------------------------
     Shader shaderGeometryPass("8.1.g_buffer.vs", "8.1.g_buffer.fs");
+    Shader pureColor("pure_color.vs", "pure_color.fs");
     Shader shaderLightingPass("8.1.deferred_shading.vs", "8.1.deferred_shading.fs");
     Shader shaderLightBox("8.1.deferred_light_box.vs", "8.1.deferred_light_box.fs");
     Shader shaderSky("skybox.vs", "skybox.fs");
@@ -91,11 +91,13 @@ int main()
     // load models
     // ----------- 
     Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-    std::vector<glm::vec3> objectPositions;
+    std::vector<glm::vec3> objectPositions; 
     objectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
     objectPositions.push_back(glm::vec3(-3.1,  -0.6, -3.0));
-    //objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
-    //objectPositions.push_back(glm::vec3( 3.0,  -0.5, -3.0));
+    objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
+    objectPositions.push_back(glm::vec3( 0.01,  -0.51, -3.1));
+    objectPositions.push_back(glm::vec3( 3.01,  -0.5, -3.0));
+    objectPositions.push_back(glm::vec3( 3.0001,  -0.52, -3.10));
     //objectPositions.push_back(glm::vec3(-3.0,  -0.5,  0.0));
     //objectPositions.push_back(glm::vec3( 0.0,  -0.5,  0.0));
     //objectPositions.push_back(glm::vec3( 3.0,  -0.5,  0.0));
@@ -210,7 +212,7 @@ int main()
         //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer); 
           
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f, 2600.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
         
@@ -235,11 +237,28 @@ int main()
         shaderGeometryPass.setFloat("iTime", currentFrame);
         for (unsigned int i = 0; i < objectPositions.size(); i++)  
         {
+            if (i % 2 == 0) continue;
             model = glm::mat4(1.0f);
             model = glm::translate(model, objectPositions[i]); 
-            model = glm::scale(model, glm::vec3(0.5f));
+            model = glm::scale(model, glm::vec3(100.5f));
             shaderGeometryPass.setMat4("model", model);
             backpack.Draw(shaderGeometryPass);
+            //break;
+        }
+
+        pureColor.use();
+        pureColor.setMat4("projection", projection);
+        pureColor.setMat4("view", view);
+        pureColor.setFloat("iTime", currentFrame);
+
+        for (unsigned int i = 0; i < objectPositions.size(); i++)
+        {
+            if (i % 2 != 0) continue;
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, objectPositions[i]);
+            model = glm::scale(model, glm::vec3(100.5f));
+            pureColor.setMat4("model", model);
+            backpack.Draw(pureColor);
             //break;
         }
 

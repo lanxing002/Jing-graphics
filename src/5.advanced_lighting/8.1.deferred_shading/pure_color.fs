@@ -21,8 +21,6 @@ float dither13(vec2 pos)
 void main()
 {    
     // and the diffuse per-fragment color
-    fragColor.rgb = texture(texture_diffuse1, TexCoords).rgb;
+    fragColor.rgb = vec3(0.34, 0.53, 0.72);
     fragColor.a = 1.0;
-    //float alpha = clamp((cos(iTime * 0.2) + 1.0) * 0.5, 0.0, 1.0);
-    //fragColor.a = step(alpha, dither13(gl_FragCoord.xy));
 }
