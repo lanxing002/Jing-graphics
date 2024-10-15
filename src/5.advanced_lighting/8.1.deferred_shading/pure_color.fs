@@ -8,6 +8,8 @@ layout (location = 0) out vec4 fragColor;
 in vec2 TexCoords;
 in vec3 FragPos;
 in vec3 Normal;
+in float logZ;
+
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
@@ -23,4 +25,5 @@ void main()
     // and the diffuse per-fragment color
     fragColor.rgb = vec3(0.34, 0.53, 0.72);
     fragColor.a = 1.0;
+    gl_FragDepth = logZ; 
 }

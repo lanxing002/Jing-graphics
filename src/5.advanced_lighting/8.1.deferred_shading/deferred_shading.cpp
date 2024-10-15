@@ -26,7 +26,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(120.0f, 50.0f, 5.0f));
+Camera camera(glm::vec3(00.0f,  5.0f, 14000.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -42,7 +42,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    camera.MovementSpeed *= 36.0;
+    camera.MovementSpeed *= 360.0;
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -78,6 +78,7 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_GREATER);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     // build and compile shaders
@@ -92,20 +93,11 @@ int main()
     // ----------- 
     Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     std::vector<glm::vec3> objectPositions; 
-    objectPositions.push_back(glm::vec3(-3.0, -0.5, -3.0));
-    objectPositions.push_back(glm::vec3(-3.1,  -0.6, -3.0));
-    objectPositions.push_back(glm::vec3( 0.0,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 0.01,  -0.51, -3.1));
-    objectPositions.push_back(glm::vec3( 3.01,  -0.5, -3.0));
-    objectPositions.push_back(glm::vec3( 3.0001,  -0.52, -3.10));
-    //objectPositions.push_back(glm::vec3(-3.0,  -0.5,  0.0));
-    //objectPositions.push_back(glm::vec3( 0.0,  -0.5,  0.0));
-    //objectPositions.push_back(glm::vec3( 3.0,  -0.5,  0.0));
-    //objectPositions.push_back(glm::vec3(-3.0,  -0.5,  3.0));
-    //objectPositions.push_back(glm::vec3( 0.0,  -0.5,  3.0));
-    //objectPositions.push_back(glm::vec3( 3.0,  -0.5,  3.0));
+    objectPositions.push_back(glm::vec3(-3.0000, -0.5000,  -3.000001));
+    objectPositions.push_back(glm::vec3(-3.0001,  -0.5001, -3.000000));
+    objectPositions.push_back(glm::vec3( 0.001,  -0.500, -3.00000));
+    objectPositions.push_back(glm::vec3( 0.000,  -0.501, -3.00001));
      
-    // load skybox texture
     vector<std::string> faces
     {
         FileSystem::getPath("resources/textures/skybox/right.jpg"),
@@ -185,7 +177,8 @@ int main()
     //shaderLightingPass.setInt("gPosition", 0);
     //shaderLightingPass.setInt("gNormal", 1);
     //shaderLightingPass.setInt("gAlbedoSpec", 2);
-
+    glm::vec3 lookDir = glm::vec3(0.0) - camera.Position;
+    camera.Front = glm::normalize(lookDir);
     // render loop
     // ----------- 
     while (!glfwWindowShouldClose(window))
@@ -203,19 +196,20 @@ int main()
         // render
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearDepth(1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          
           
           
         // 1. geometry pass: render scene's geometry/color data into gbuffer 
-        // -----------------------------------------------------------------
+        // -------------------------------------- --------------------------
         //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer); 
-          
+         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f, 2600.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f, 66600.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
-        
+         
         // 4. render sky box 
         {
             glActiveTexture(GL_TEXTURE0);   
@@ -228,7 +222,7 @@ int main()
             shaderSky.setMat4("model", glm::mat4()); 
             shaderSky.setMat4("projection", projection);
             shaderSky.setMat4("view", lview);
-            renderCube(); 
+            //renderCube(); 
         } 
          
         shaderGeometryPass.use();
@@ -239,8 +233,8 @@ int main()
         {
             if (i % 2 == 0) continue;
             model = glm::mat4(1.0f);
+            model = glm::scale(model, glm::vec3(1000.5f));
             model = glm::translate(model, objectPositions[i]); 
-            model = glm::scale(model, glm::vec3(100.5f));
             shaderGeometryPass.setMat4("model", model);
             backpack.Draw(shaderGeometryPass);
             //break;
@@ -255,8 +249,8 @@ int main()
         {
             if (i % 2 != 0) continue;
             model = glm::mat4(1.0f);
+            model = glm::scale(model, glm::vec3(1000.5f));
             model = glm::translate(model, objectPositions[i]);
-            model = glm::scale(model, glm::vec3(100.5f));
             pureColor.setMat4("model", model);
             backpack.Draw(pureColor);
             //break;
@@ -447,6 +441,8 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    std::cout << "camera position " << std::endl;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
