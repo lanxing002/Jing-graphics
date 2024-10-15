@@ -88,7 +88,7 @@ int main()
     Shader shaderLightingPass("8.1.deferred_shading.vs", "8.1.deferred_shading.fs");
     Shader shaderLightBox("8.1.deferred_light_box.vs", "8.1.deferred_light_box.fs");
     Shader shaderSky("skybox.vs", "skybox.fs");
-      
+       
     // load models
     // ----------- 
     Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));

@@ -33,6 +33,6 @@ void main()
     Normal = normalMatrix * aNormal;
 
     vec4 pos = projection * view * worldPos;
-    logDepth(pos);
+    //logDepth(pos);
     gl_Position = pos;
 }

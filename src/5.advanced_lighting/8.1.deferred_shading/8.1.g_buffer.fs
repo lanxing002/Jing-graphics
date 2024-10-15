@@ -24,7 +24,7 @@ void main()
     // and the diffuse per-fragment color
     fragColor.rgb = texture(texture_diffuse1, TexCoords).rgb;
     fragColor.a = 1.0;
-    gl_FragDepth = logZ; 
+    //gl_FragDepth = logZ; 
     //float alpha = clamp((cos(iTime * 0.2) + 1.0) * 0.5, 0.0, 1.0);
     //fragColor.a = step(alpha, dither13(gl_FragCoord.xy));
 }

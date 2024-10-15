@@ -25,5 +25,5 @@ void main()
     // and the diffuse per-fragment color
     fragColor.rgb = vec3(0.34, 0.53, 0.72);
     fragColor.a = 1.0;
-    gl_FragDepth = logZ; 
+    //gl_FragDepth = logZ; 
 }
