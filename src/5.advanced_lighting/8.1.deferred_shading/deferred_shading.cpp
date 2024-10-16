@@ -11,6 +11,10 @@
 #include <learnopengl/model.h>
 
 #include <iostream>
+<<<<<<< HEAD
+=======
+#define REVERSED_Z
+>>>>>>> cfdf378 (stash)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -34,6 +38,31 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+<<<<<<< HEAD
+=======
+// infity far plane
+glm::mat4 MakeInfReversedZProjRH(float fovY_radians, float aspectWbyH, float zNear)
+{
+    float f = 1.0f / tan(fovY_radians / 2.0f);
+    return glm::mat4(
+        f / aspectWbyH, 0.0f, 0.0f, 0.0f,
+        0.0f, f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, -1.0f,
+        0.0f, 0.0f, zNear, 0.0f);
+}
+
+// opengl
+glm::mat4 MakeInfProjRH(float fovY_radians, float aspectWbyH, float zNear)
+{
+    float f = 1.0f / tan(fovY_radians / 2.0f);
+    return glm::mat4(
+        f / aspectWbyH, 0.0f, 0.0f, 0.0f,
+        0.0f, f, 0.0f, 0.0f,
+        0.0f, 0.0f, -1.0f, -1.0f,
+        0.0f, 0.0f, -2.0 * zNear, 0.0f);
+}
+
+>>>>>>> cfdf378 (stash)
 int main()
 {
     // glfw: initialize and configure
