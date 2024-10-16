@@ -11,16 +11,13 @@
 #include <learnopengl/model.h>
 
 #include <iostream>
-<<<<<<< HEAD
-=======
 #define REVERSED_Z
->>>>>>> cfdf378 (stash)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
-unsigned int loadTexture(const char *path, bool gammaCorrection);
+void processInput(GLFWwindow* window);
+unsigned int loadTexture(const char* path, bool gammaCorrection);
 unsigned int loadCubemap(const std::vector<std::string>& paths);
 void renderQuad();
 void renderCube();
@@ -30,7 +27,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(00.0f,  5.0f, 400.0f));
+Camera camera(glm::vec3(00.0f, 5.0f, 400.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -38,9 +35,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-<<<<<<< HEAD
-=======
-// infity far plane
+// infity far plane same with direct
 glm::mat4 MakeInfReversedZProjRH(float fovY_radians, float aspectWbyH, float zNear)
 {
     float f = 1.0f / tan(fovY_radians / 2.0f);
@@ -62,7 +57,6 @@ glm::mat4 MakeInfProjRH(float fovY_radians, float aspectWbyH, float zNear)
         0.0f, 0.0f, -2.0 * zNear, 0.0f);
 }
 
->>>>>>> cfdf378 (stash)
 int main()
 {
     // glfw: initialize and configure
@@ -72,10 +66,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     camera.MovementSpeed *= 360.0;
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-    
+
     // glfw window creation
     // --------------------
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
@@ -107,32 +98,36 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
-    //glDepthFunc(GL_GREATER);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#ifdef REVERSED_Z
+
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+    glDepthFunc(GL_GREATER);
 
-        GLuint color, depth, fbo;
+    GLuint color, depth, fbo;
 
-        glGenTextures(1, &color);
-        glBindTexture(GL_TEXTURE_2D, color);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_SRGB8_ALPHA8, SCR_WIDTH, SCR_HEIGHT);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    glGenTextures(1, &color);
+    glBindTexture(GL_TEXTURE_2D, color);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_SRGB8_ALPHA8, SCR_WIDTH, SCR_HEIGHT);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-        glGenTextures(1, &depth);
-        glBindTexture(GL_TEXTURE_2D, depth);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, SCR_WIDTH, SCR_HEIGHT);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    glGenTextures(1, &depth);
+    glBindTexture(GL_TEXTURE_2D, depth);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT32F, SCR_WIDTH, SCR_HEIGHT);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr, "glCheckFramebufferStatus: %x\n", status);
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "glCheckFramebufferStatus: %x\n", status);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif // REVERSED_Z
 
     // build and compile shaders
     // -------------------------
@@ -141,16 +136,16 @@ int main()
     Shader shaderLightingPass("8.1.deferred_shading.vs", "8.1.deferred_shading.fs");
     Shader shaderLightBox("8.1.deferred_light_box.vs", "8.1.deferred_light_box.fs");
     Shader shaderSky("skybox.vs", "skybox.fs");
-       
+
     // load models
     // ----------- 
     Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-    std::vector<glm::vec3> objectPositions; 
-    objectPositions.push_back(glm::vec3(-3.0000, -0.5000,  -3.000001));
-    objectPositions.push_back(glm::vec3(-3.0001,  -0.5001, -3.000000));
-    objectPositions.push_back(glm::vec3( 0.001,  -0.500, -3.00000));
-    objectPositions.push_back(glm::vec3( 0.000,  -0.501, -3.00001));
-     
+    std::vector<glm::vec3> objectPositions;
+    objectPositions.push_back(glm::vec3(-3.0000, -0.5000, -3.000001));
+    objectPositions.push_back(glm::vec3(-3.0001, -0.5001, -3.000000));
+    objectPositions.push_back(glm::vec3(0.001, -0.500, -3.00000));
+    objectPositions.push_back(glm::vec3(0.000, -0.501, -3.00001));
+
     vector<std::string> faces
     {
         FileSystem::getPath("resources/textures/skybox/right.jpg"),
@@ -161,82 +156,18 @@ int main()
         FileSystem::getPath("resources/textures/skybox/back.jpg")
     };
     unsigned int cubemapTexture = loadCubemap(faces);
-
-
-    // configure g-buffer framebuffer
-    // ------------------------------
-    //unsigned int gBuffer;
-    //glGenFramebuffers(1, &gBuffer);
-    //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-    //unsigned int gPosition, gNormal, gAlbedoSpec;
-    //// position color buffer
-    //glGenTextures(1, &gPosition);
-    //glBindTexture(GL_TEXTURE_2D, gPosition);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-    //// normal color buffer
-    //glGenTextures(1, &gNormal);
-    //glBindTexture(GL_TEXTURE_2D, gNormal); 
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-    //// color + specular color buffer
-    //glGenTextures(1, &gAlbedoSpec);
-    //glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
-    //// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
-    //unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
-    //glDrawBuffers(3, attachments);
-    //// create and attach depth buffer (renderbuffer)
-    //unsigned int rboDepth;
-    //glGenRenderbuffers(1, &rboDepth);
-    //glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-    //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
-    //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-    //// finally check if framebuffer is complete
-    //if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    //    std::cout << "Framebuffer not complete!" << std::endl;
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // lighting info
-    // -------------
-    //const unsigned int NR_LIGHTS = 32;
-    //std::vector<glm::vec3> lightPositions;
-    //std::vector<glm::vec3> lightColors;
-    //srand(13);
-    //for (unsigned int i = 0; i < NR_LIGHTS; i++)
-    //{
-    //    // calculate slightly random offsets
-    //    float xPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
-    //    float yPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 4.0);
-    //    float zPos = static_cast<float>(((rand() % 100) / 100.0) * 6.0 - 3.0);
-    //    lightPositions.push_back(glm::vec3(xPos, yPos, zPos));
-    //    // also calculate random color
-    //    float rColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
-    //    float gColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
-    //    float bColor = static_cast<float>(((rand() % 100) / 200.0f) + 0.5); // between 0.5 and 1.0
-    //    lightColors.push_back(glm::vec3(rColor, gColor, bColor));
-    //}
-
-    // shader configuration
-    // --------------------
-    //shaderLightingPass.use();
-    //shaderLightingPass.setInt("gPosition", 0);
-    //shaderLightingPass.setInt("gNormal", 1);
-    //shaderLightingPass.setInt("gAlbedoSpec", 2);
     glm::vec3 lookDir = glm::vec3(0.0) - camera.Position;
     camera.Front = glm::normalize(lookDir);
+
     // render loop
     // ----------- 
     while (!glfwWindowShouldClose(window))
     {
+#ifdef REVERSED_Z
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glClearDepth(1.0);
+#endif // REVERSED_Z
+
         // per-frame time logic
         // --------------------
         auto currentFrame = static_cast<float>(glfwGetTime());
@@ -250,43 +181,45 @@ int main()
         // render
         // ------
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        //glClearDepth(1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         
+
         // 1. geometry pass: render scene's geometry/color data into gbuffer 
         // -------------------------------------- --------------------------
-        //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer); 
-         
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f, 600.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#ifdef REVERSED_Z
+        glm::mat4 projection = MakeInfReversedZProjRH(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f);
+#else
+        glm::mat4 projection = MakeInfProjRH(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.99f);
+#endif // DEBUG
+
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
-         
+
         // 4. render sky box 
         {
-            glActiveTexture(GL_TEXTURE0);   
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
             shaderSky.setInt("skybox", 0);
 
             glm::mat4 lview = view;
-            lview[3] = glm::vec4(0.0, .0, .0, 1.0);  
+            lview[3] = glm::vec4(0.0, .0, .0, 1.0);
             shaderSky.use();
-            shaderSky.setMat4("model", glm::mat4()); 
+            shaderSky.setMat4("model", glm::mat4());
             shaderSky.setMat4("projection", projection);
             shaderSky.setMat4("view", lview);
-            renderCube(); 
-        } 
-         
+            //renderCube(); 
+        }
+
         shaderGeometryPass.use();
         shaderGeometryPass.setMat4("projection", projection);
         shaderGeometryPass.setMat4("view", view);
         shaderGeometryPass.setFloat("iTime", currentFrame);
-        for (unsigned int i = 0; i < objectPositions.size(); i++)  
+        for (unsigned int i = 0; i < objectPositions.size(); i++)
         {
             if (i % 2 == 0) continue;
             model = glm::mat4(1.0f);
             model = glm::scale(model, glm::vec3(100.5f));
-            model = glm::translate(model, objectPositions[i]); 
+            model = glm::translate(model, objectPositions[i]);
             shaderGeometryPass.setMat4("model", model);
             backpack.Draw(shaderGeometryPass);
             //break;
@@ -308,61 +241,9 @@ int main()
             //break;
         }
 
-        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        //// 2. lighting pass: calculate lighting by iterating over a screen filled quad pixel-by-pixel using the gbuffer's content.
-        //// -----------------------------------------------------------------------------------------------------------------------
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //shaderLightingPass.use();
-        //glActiveTexture(GL_TEXTURE0);
-        //glBindTexture(GL_TEXTURE_2D, gPosition);
-        //glActiveTexture(GL_TEXTURE1);
-        //glBindTexture(GL_TEXTURE_2D, gNormal);
-        //glActiveTexture(GL_TEXTURE2);
-        //glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-        //// send light relevant uniforms
-        //for (unsigned int i = 0; i < lightPositions.size(); i++)
-        //{
-        //    shaderLightingPass.setVec3("lights[" + std::to_string(i) + "].Position", lightPositions[i]);
-        //    shaderLightingPass.setVec3("lights[" + std::to_string(i) + "].Color", lightColors[i]);
-        //    // update attenuation parameters and calculate radius
-        //    const float linear = 0.7f;
-        //    const float quadratic = 1.8f;
-        //    shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Linear", linear);
-        //    shaderLightingPass.setFloat("lights[" + std::to_string(i) + "].Quadratic", quadratic);
-        //}
-        //shaderLightingPass.setVec3("viewPos", camera.Position);
-        //// finally render quad
-        //renderQuad();
-
-        // 2.5. copy content of geometry's depth buffer to default framebuffer's depth buffer
-        // ----------------------------------------------------------------------------------
-        //glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-        //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-        //// blit to default framebuffer. Note that this may or may not work as the internal formats of both the FBO and default framebuffer have to match.
-        //// the internal formats are implementation defined. This works on all of my systems, but if it doesn't on yours you'll likely have to write to the 		
-        //// depth buffer in another shader stage (or somehow see to match the default framebuffer's internal format with the FBO's internal format).
-        //glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        //// 3. render lights on top of scene
-        //// --------------------------------
-        //shaderLightBox.use();
-        //shaderLightBox.setMat4("projection", projection);
-        //shaderLightBox.setMat4("view", view);
-        //for (unsigned int i = 0; i < lightPositions.size(); i++)
-        //{
-        //    model = glm::mat4(1.0f);
-        //    model = glm::translate(model, lightPositions[i]);
-        //    model = glm::scale(model, glm::vec3(0.125f));
-        //    shaderLightBox.setMat4("model", model);
-        //    shaderLightBox.setVec3("lightColor", lightColors[i]); 
-        //    renderCube();
-        //}
-
-         
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
+#ifdef REVERSED_Z
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
@@ -372,7 +253,7 @@ int main()
             0, 0, SCR_WIDTH, SCR_HEIGHT,
             GL_COLOR_BUFFER_BIT, GL_LINEAR);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+#endif
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -490,7 +371,7 @@ void renderQuad()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
