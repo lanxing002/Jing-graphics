@@ -14,6 +14,7 @@ in float logZ;
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
 uniform float iTime;
+uniform vec3 color;
 
 float dither13(vec2 pos)
 {
@@ -24,6 +25,7 @@ void main()
 {    
     // and the diffuse per-fragment color
     fragColor.rgb = vec3(0.34, 0.53, 0.72);
+    //fragColor.rgb = color;
     fragColor.a = 1.0;
     //gl_FragDepth = logZ; 
 }

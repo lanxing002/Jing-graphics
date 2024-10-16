@@ -27,7 +27,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(00.0f, 5.0f, 400.0f));
+Camera camera(glm::vec3(00.0f, 5.0f, 800.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -131,7 +131,7 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader shaderGeometryPass("8.1.g_buffer.vs", "8.1.g_buffer.fs");
+    Shader shaderGeometryPass("8.1.g_buffer.vs", "8.1.g_buffer.fs"); 
     Shader pureColor("pure_color.vs", "pure_color.fs");
     Shader shaderLightingPass("8.1.deferred_shading.vs", "8.1.deferred_shading.fs");
     Shader shaderLightBox("8.1.deferred_light_box.vs", "8.1.deferred_light_box.fs");
@@ -141,10 +141,10 @@ int main()
     // ----------- 
     Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     std::vector<glm::vec3> objectPositions;
-    objectPositions.push_back(glm::vec3(-3.0000, -0.5000, -3.000001));
-    objectPositions.push_back(glm::vec3(-3.0001, -0.5001, -3.000000));
-    objectPositions.push_back(glm::vec3(0.001, -0.500, -3.00000));
-    objectPositions.push_back(glm::vec3(0.000, -0.501, -3.00001));
+    objectPositions.push_back(glm::vec3(-3.0000, -0.5001, -3.0001));
+    objectPositions.push_back(glm::vec3(-3.0000, -0.5001, -3.0002));
+    objectPositions.push_back(glm::vec3(0.001, -0.501, -3.0000));
+    objectPositions.push_back(glm::vec3(0.001, -0.501, -3.0001));
 
     vector<std::string> faces
     {
@@ -165,7 +165,7 @@ int main()
     {
 #ifdef REVERSED_Z
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glClearDepth(1.0);
+        glClearDepth(0.0);
 #endif // REVERSED_Z
 
         // per-frame time logic
