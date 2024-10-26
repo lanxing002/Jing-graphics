@@ -9,6 +9,6 @@ void main()
 {    
     vec3 c = normalize(FragPos);
     //c = (c + 1.0) * 0.5;
-    gl_FragDepth =0.999;
+    gl_FragDepth =0.0001;
     fragColor = texture(skybox, -c);
 }

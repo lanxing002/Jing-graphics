@@ -160,7 +160,7 @@ int main()
     camera.Front = glm::normalize(lookDir);
 
     // render loop
-    // ----------- 
+    // -----------  
     while (!glfwWindowShouldClose(window))
     {
 #ifdef REVERSED_Z
@@ -207,7 +207,7 @@ int main()
             shaderSky.setMat4("model", glm::mat4());
             shaderSky.setMat4("projection", projection);
             shaderSky.setMat4("view", lview);
-            //renderCube(); 
+            renderCube(); 
         }
 
         shaderGeometryPass.use();
