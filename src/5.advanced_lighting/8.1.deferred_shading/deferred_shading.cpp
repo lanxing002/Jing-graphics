@@ -17,14 +17,15 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+unsigned int loadTexture(const char* path, bool gammaCorrection);
 unsigned int loadLodTexture(const char* path, bool gammaCorrection);
 unsigned int loadCubemap(const std::vector<std::string>& paths);
 void renderQuad();
 void renderCube();
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1080 * 2;
+const unsigned int SCR_HEIGHT = 720 * 2;
 
 // camera
 Camera camera(glm::vec3(00.0f, 5.0f, 800.0f));
@@ -161,21 +162,22 @@ int main()
     glm::vec3 lookDir = glm::vec3(0.0) - camera.Position;
     camera.Front = glm::normalize(lookDir);
 
-    unsigned int terrainTex = loadLodTexture(FileSystem::getPath("resources/textures/Grnjr.png").c_str(), true);
+    unsigned int lodTex = loadLodTexture(FileSystem::getPath("resources/textures/Grnjr.png").c_str(), true);
+    unsigned int terrainTex = loadTexture(FileSystem::getPath("resources/textures/Grnjr.png").c_str(), true);
 
     // render loop
     // -----------  
-    while (!glfwWindowShouldClose(window))
-    {
-#ifdef REVERSED_Z
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glClearDepth(0.0);
-#endif // REVERSED_Z
-
+    while (!glfwWindowShouldClose(window))   
+    { 
+#ifdef REVERSED_Z  
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);    
+        glClearDepth(0.0); 
+#endif // REVERSED_Z 
+          
         // per-frame time logic
         // --------------------
         auto currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame; 
+        deltaTime = currentFrame - lastFrame;  
         lastFrame = currentFrame; 
 
         // input 
@@ -528,5 +530,53 @@ unsigned int loadLodTexture(char const* path, bool gammaCorrection)
 
         stbi_image_free(data);
     }
+    return textureID;
+}
+
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+unsigned int loadTexture(char const* path, bool gammaCorrection)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum internalFormat;
+        GLenum dataFormat;
+        if (nrComponents == 1)
+        {
+            internalFormat = dataFormat = GL_RED;
+        }
+        else if (nrComponents == 3)
+        {
+            internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
+            dataFormat = GL_RGB;
+        }
+        else if (nrComponents == 4)
+        {
+            internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+            dataFormat = GL_RGBA;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
     return textureID;
 }
