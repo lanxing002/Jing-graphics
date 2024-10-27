@@ -17,7 +17,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
-unsigned int loadTexture(const char* path, bool gammaCorrection);
+unsigned int loadLodTexture(const char* path, bool gammaCorrection);
 unsigned int loadCubemap(const std::vector<std::string>& paths);
 void renderQuad();
 void renderCube();
@@ -136,10 +136,12 @@ int main()
     Shader shaderLightingPass("8.1.deferred_shading.vs", "8.1.deferred_shading.fs");
     Shader shaderLightBox("8.1.deferred_light_box.vs", "8.1.deferred_light_box.fs");
     Shader shaderSky("skybox.vs", "skybox.fs");
+    Shader terrain("terrain.vs", "terrain.fs"); 
 
     // load models
     // ----------- 
-    Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
+    Model backpack{""};
+    //Model backpack(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
     std::vector<glm::vec3> objectPositions;
     objectPositions.push_back(glm::vec3(-3.0000, -0.5001, -3.0001));
     objectPositions.push_back(glm::vec3(-3.0000, -0.5001, -3.0002));
@@ -159,6 +161,8 @@ int main()
     glm::vec3 lookDir = glm::vec3(0.0) - camera.Position;
     camera.Front = glm::normalize(lookDir);
 
+    unsigned int terrainTex = loadLodTexture(FileSystem::getPath("resources/textures/Grnjr.png").c_str(), true);
+
     // render loop
     // -----------  
     while (!glfwWindowShouldClose(window))
@@ -171,11 +175,11 @@ int main()
         // per-frame time logic
         // --------------------
         auto currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        deltaTime = currentFrame - lastFrame; 
+        lastFrame = currentFrame; 
 
-        // input
-        // -----
+        // input 
+        // ----- 
         processInput(window);
 
         // render
@@ -221,26 +225,39 @@ int main()
             model = glm::scale(model, glm::vec3(100.5f));
             model = glm::translate(model, objectPositions[i]);
             shaderGeometryPass.setMat4("model", model);
-            backpack.Draw(shaderGeometryPass);
+            //backpack.Draw(shaderGeometryPass);
             //break;
         }
 
-        pureColor.use();
-        pureColor.setMat4("projection", projection);
-        pureColor.setMat4("view", view);
-        pureColor.setFloat("iTime", currentFrame);
+        //pureColor.use();
+        //pureColor.setMat4("projection", projection);
+        //pureColor.setMat4("view", view);
+        //pureColor.setFloat("iTime", currentFrame);
 
-        for (unsigned int i = 0; i < objectPositions.size(); i++)
+        //for (unsigned int i = 0; i < objectPositions.size(); i++)
+        //{
+        //    if (i % 2 != 0) continue;
+        //    model = glm::mat4(1.0f);
+        //    model = glm::scale(model, glm::vec3(100.5f));
+        //    model = glm::translate(model, objectPositions[i]);
+        //    pureColor.setMat4("model", model);
+        //    backpack.Draw(pureColor);
+        //    //break;
+        //}
         {
-            if (i % 2 != 0) continue;
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, terrainTex);
+            terrain.setInt("baseColor", 0);
+            terrain.use();
+            terrain.setMat4("projection", projection);
+            terrain.setMat4("view", view);
+            terrain.setFloat("iTime", currentFrame);
             model = glm::mat4(1.0f);
-            model = glm::scale(model, glm::vec3(100.5f));
-            model = glm::translate(model, objectPositions[i]);
-            pureColor.setMat4("model", model);
-            backpack.Draw(pureColor);
-            //break;
+            model = glm::scale(model, glm::vec3(3800.5f));
+            model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+            terrain.setMat4("model", model);
+            renderQuad();
         }
-
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
 #ifdef REVERSED_Z
@@ -347,7 +364,7 @@ void renderQuad()
     if (quadVAO == 0)
     {
         float quadVertices[] = {
-            // positions        // texture Coords
+            // positions        // texture Coords 
             -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
             -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
              1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
@@ -459,10 +476,57 @@ unsigned int loadCubemap(const std::vector<std::string>& faces)
     }
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    return textureID;
+     
+    return textureID; 
 }
 
+// utility function for loading a 2D texture from file 
+// ---------------------------------------------------
+unsigned int loadLodTexture(char const* path, bool gammaCorrection)
+{
+    unsigned int textureID;   
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+     
+
+    // for every lod load different image
+    for (int lod = 0; lod < 11; lod++){
+        int width, height, nrComponents;
+        std::string spath = FileSystem::getPath("resources/textures/lod" + std::to_string(lod) + ".png");
+        unsigned char* data = stbi_load(spath.c_str(), &width, &height, &nrComponents, 0);
+
+        if (nullptr == data) {
+            std::cout << "Texture failed to load at path: " << path << std::endl;
+            stbi_image_free(data);
+            continue;
+        }
+
+        GLenum internalFormat;
+        GLenum dataFormat;
+        if (nrComponents == 1)
+        {
+            internalFormat = dataFormat = GL_RED;
+        }
+        else if (nrComponents == 3)
+        {
+            internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
+            dataFormat = GL_RGB;
+        }
+        else if (nrComponents == 4)
+        {
+            internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+            dataFormat = GL_RGBA;
+        }
+        glTexImage2D(GL_TEXTURE_2D, lod, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+
+        stbi_image_free(data);
+    }
+    return textureID;
+}
